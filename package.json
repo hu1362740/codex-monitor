@@ -5,14 +5,15 @@
   "description": "Production-ready MVP frontend monitoring platform with SDK, server, worker and React console.",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "node scripts/run-with-env.mjs pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css,prisma}\"",
-    "db:generate": "pnpm --filter @codex-monitor/server prisma:generate",
-    "db:migrate": "pnpm --filter @codex-monitor/server prisma:migrate",
-    "db:seed": "pnpm --filter @codex-monitor/server prisma:seed"
+    "db:check": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:check",
+    "db:generate": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:generate",
+    "db:migrate": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:migrate",
+    "db:seed": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:seed"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
