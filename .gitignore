@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+coverage
+.env
+.env.local
+.turbo
+.DS_Store
+*.log
+uploads
+tmp
+apps/server/prisma/migrations/dev

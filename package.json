@@ -1,0 +1,23 @@
+{
+  "name": "codex-monitor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-ready MVP frontend monitoring platform with SDK, server, worker and React console.",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md,css,prisma}\"",
+    "db:generate": "pnpm --filter @codex-monitor/server prisma:generate",
+    "db:migrate": "pnpm --filter @codex-monitor/server prisma:migrate",
+    "db:seed": "pnpm --filter @codex-monitor/server prisma:seed"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

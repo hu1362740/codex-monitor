@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum EventType {
+  error
+  performance
+  behavior
+  custom
+}
+
+enum AlertMetric {
+  error_count
+  error_rate
+  api_failure_rate
+  lcp
+}
+
+enum AlertOperator {
+  gt
+  gte
+  lt
+  lte
+}
+
+enum AlertChannel {
+  webhook
+  email
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  projects     Project[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  ownerId      String
+  owner        User          @relation(fields: [ownerId], references: [id])
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([ownerId])
+  @@map("projects")
+}
+
+model Application {
+  id              String              @id @default(cuid())
+  name            String
+  projectId       String
+  project         Project             @relation(fields: [projectId], references: [id])
+  appKey          String              @unique
+  allowedDomains  Json
+  environment     String              @default("production")
+  eventsRaw       EventRaw[]
+  errorEvents     ErrorEvent[]
+  performanceEvents PerformanceEvent[]
+  behaviorEvents  BehaviorEvent[]
+  metricAggregates MetricAggregate[]
+  alertRules      AlertRule[]
+  sourcemaps      SourcemapArtifact[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([projectId])
+  @@map("applications")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  appKey    String   @unique
+  name      String
+  createdAt DateTime @default(now())
+
+  @@map("api_keys")
+}
+
+model EventRaw {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  type          EventType
+  name          String
+  sessionId     String
+  traceId       String
+  userId        String?
+  url           String      @db.Text
+  release       String?
+  environment   String
+  payload       Json
+  occurredAt    DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, type, occurredAt])
+  @@index([traceId])
+  @@map("events_raw")
+}
+
+model ErrorEvent {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  rawEventId    String?
+  fingerprint   String
+  name          String
+  message       String      @db.Text
+  stack         String?     @db.LongText
+  mappedStack   String?     @db.LongText
+  source        String?
+  filename      String?     @db.Text
+  lineno        Int?
+  colno         Int?
+  url           String      @db.Text
+  release       String?
+  environment   String
+  sessionId     String
+  userId        String?
+  occurredAt    DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, occurredAt])
+  @@index([applicationId, fingerprint])
+  @@map("error_events")
+}
+
+model PerformanceEvent {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  rawEventId    String?
+  name          String
+  value         Float?
+  duration      Float?
+  status        Int?
+  url           String      @db.Text
+  metadata      Json?
+  release       String?
+  environment   String
+  sessionId     String
+  occurredAt    DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, name, occurredAt])
+  @@map("performance_events")
+}
+
+model BehaviorEvent {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  rawEventId    String?
+  name          String
+  target        String?     @db.Text
+  url           String      @db.Text
+  metadata      Json?
+  release       String?
+  environment   String
+  sessionId     String
+  userId        String?
+  occurredAt    DateTime
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, name, occurredAt])
+  @@map("behavior_events")
+}
+
+model MetricAggregate {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  bucket        DateTime
+  metric        String
+  value         Float
+  dimensions    Json?
+  createdAt     DateTime    @default(now())
+
+  @@unique([applicationId, bucket, metric])
+  @@index([applicationId, bucket])
+  @@map("metric_aggregates")
+}
+
+model AlertRule {
+  id            String       @id @default(cuid())
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id])
+  name          String
+  metric        AlertMetric
+  operator      AlertOperator
+  threshold     Float
+  durationMin   Int          @default(5)
+  channel       AlertChannel
+  target        String
+  enabled       Boolean      @default(true)
+  records       AlertRecord[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([applicationId, enabled])
+  @@map("alert_rules")
+}
+
+model AlertRecord {
+  id            String     @id @default(cuid())
+  ruleId        String
+  rule          AlertRule  @relation(fields: [ruleId], references: [id])
+  value         Float
+  message       String     @db.Text
+  notified      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+
+  @@index([ruleId, createdAt])
+  @@map("alert_records")
+}
+
+model SourcemapArtifact {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  release       String
+  fileName      String
+  filePath      String
+  sourceRoot    String?
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId, release])
+  @@map("sourcemap_artifacts")
+}
