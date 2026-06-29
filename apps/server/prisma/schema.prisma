@@ -34,9 +34,9 @@ enum AlertChannel {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String    @id @default(cuid()) @db.VarChar(64)
   email        String    @unique
-  name         String
+  name         String        @db.VarChar(128)
   passwordHash String
   projects     Project[]
   createdAt    DateTime  @default(now())
@@ -46,10 +46,10 @@ model User {
 }
 
 model Project {
-  id           String        @id @default(cuid())
-  name         String
+  id           String        @id @default(cuid()) @db.VarChar(64)
+  name         String        @db.VarChar(128)
   description  String?
-  ownerId      String
+  ownerId      String        @db.VarChar(64)
   owner        User          @relation(fields: [ownerId], references: [id])
   applications Application[]
   createdAt    DateTime      @default(now())
@@ -60,11 +60,11 @@ model Project {
 }
 
 model Application {
-  id              String              @id @default(cuid())
-  name            String
-  projectId       String
+  id              String              @id @default(cuid()) @db.VarChar(64)
+  name            String              @db.VarChar(128)
+  projectId       String              @db.VarChar(64)
   project         Project             @relation(fields: [projectId], references: [id])
-  appKey          String              @unique
+  appKey          String              @unique @db.VarChar(64)
   allowedDomains  Json
   environment     String              @default("production")
   eventsRaw       EventRaw[]
@@ -82,26 +82,26 @@ model Application {
 }
 
 model ApiKey {
-  id        String   @id @default(cuid())
-  appKey    String   @unique
-  name      String
+  id        String   @id @default(cuid()) @db.VarChar(64)
+  appKey    String   @unique @db.VarChar(64)
+  name      String   @db.VarChar(128)
   createdAt DateTime @default(now())
 
   @@map("api_keys")
 }
 
 model EventRaw {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
   type          EventType
-  name          String
-  sessionId     String
-  traceId       String
-  userId        String?
+  name          String      @db.VarChar(128)
+  sessionId     String      @db.VarChar(64)
+  traceId       String      @db.VarChar(64)
+  userId        String?     @db.VarChar(64)
   url           String      @db.Text
-  release       String?
-  environment   String
+  release       String?     @db.VarChar(128)
+  environment   String      @db.VarChar(32)
   payload       Json
   occurredAt    DateTime
   createdAt     DateTime    @default(now())
@@ -112,24 +112,24 @@ model EventRaw {
 }
 
 model ErrorEvent {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
-  rawEventId    String?
-  fingerprint   String
-  name          String
+  rawEventId    String?     @db.VarChar(64)
+  fingerprint   String      @db.VarChar(64)
+  name          String      @db.VarChar(128)
   message       String      @db.Text
   stack         String?     @db.LongText
   mappedStack   String?     @db.LongText
-  source        String?
+  source        String?     @db.VarChar(64)
   filename      String?     @db.Text
   lineno        Int?
   colno         Int?
   url           String      @db.Text
-  release       String?
-  environment   String
-  sessionId     String
-  userId        String?
+  release       String?     @db.VarChar(128)
+  environment   String      @db.VarChar(32)
+  sessionId     String      @db.VarChar(64)
+  userId        String?     @db.VarChar(64)
   occurredAt    DateTime
   createdAt     DateTime    @default(now())
 
@@ -139,19 +139,19 @@ model ErrorEvent {
 }
 
 model PerformanceEvent {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
-  rawEventId    String?
-  name          String
+  rawEventId    String?     @db.VarChar(64)
+  name          String      @db.VarChar(128)
   value         Float?
   duration      Float?
   status        Int?
   url           String      @db.Text
   metadata      Json?
-  release       String?
-  environment   String
-  sessionId     String
+  release       String?     @db.VarChar(128)
+  environment   String      @db.VarChar(32)
+  sessionId     String      @db.VarChar(64)
   occurredAt    DateTime
   createdAt     DateTime    @default(now())
 
@@ -160,18 +160,18 @@ model PerformanceEvent {
 }
 
 model BehaviorEvent {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
-  rawEventId    String?
-  name          String
+  rawEventId    String?     @db.VarChar(64)
+  name          String      @db.VarChar(128)
   target        String?     @db.Text
   url           String      @db.Text
   metadata      Json?
-  release       String?
-  environment   String
-  sessionId     String
-  userId        String?
+  release       String?     @db.VarChar(128)
+  environment   String      @db.VarChar(32)
+  sessionId     String      @db.VarChar(64)
+  userId        String?     @db.VarChar(64)
   occurredAt    DateTime
   createdAt     DateTime    @default(now())
 
@@ -180,11 +180,11 @@ model BehaviorEvent {
 }
 
 model MetricAggregate {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
   bucket        DateTime
-  metric        String
+  metric        String      @db.VarChar(128)
   value         Float
   dimensions    Json?
   createdAt     DateTime    @default(now())
@@ -195,10 +195,10 @@ model MetricAggregate {
 }
 
 model AlertRule {
-  id            String       @id @default(cuid())
-  applicationId String
+  id            String       @id @default(cuid()) @db.VarChar(64)
+  applicationId String       @db.VarChar(64)
   application   Application  @relation(fields: [applicationId], references: [id])
-  name          String
+  name          String       @db.VarChar(128)
   metric        AlertMetric
   operator      AlertOperator
   threshold     Float
@@ -215,8 +215,8 @@ model AlertRule {
 }
 
 model AlertRecord {
-  id            String     @id @default(cuid())
-  ruleId        String
+  id            String     @id @default(cuid()) @db.VarChar(64)
+  ruleId        String     @db.VarChar(64)
   rule          AlertRule  @relation(fields: [ruleId], references: [id])
   value         Float
   message       String     @db.Text
@@ -228,10 +228,10 @@ model AlertRecord {
 }
 
 model SourcemapArtifact {
-  id            String      @id @default(cuid())
-  applicationId String
+  id            String      @id @default(cuid()) @db.VarChar(64)
+  applicationId String      @db.VarChar(64)
   application   Application @relation(fields: [applicationId], references: [id])
-  release       String
+  release       String      @db.VarChar(128)
   fileName      String
   filePath      String
   sourceRoot    String?

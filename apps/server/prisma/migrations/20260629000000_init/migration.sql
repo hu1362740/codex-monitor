@@ -1,7 +1,7 @@
 CREATE TABLE `users` (
-  `id` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
   `email` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
   `passwordHash` VARCHAR(191) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
@@ -10,10 +10,10 @@ CREATE TABLE `users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `projects` (
-  `id` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
   `description` VARCHAR(191) NULL,
-  `ownerId` VARCHAR(191) NOT NULL,
+  `ownerId` VARCHAR(64) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
   INDEX `projects_ownerId_idx`(`ownerId`),
@@ -21,12 +21,12 @@ CREATE TABLE `projects` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `applications` (
-  `id` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
-  `projectId` VARCHAR(191) NOT NULL,
-  `appKey` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
+  `projectId` VARCHAR(64) NOT NULL,
+  `appKey` VARCHAR(64) NOT NULL,
   `allowedDomains` JSON NOT NULL,
-  `environment` VARCHAR(191) NOT NULL DEFAULT 'production',
+  `environment` VARCHAR(32) NOT NULL DEFAULT 'production',
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
   UNIQUE INDEX `applications_appKey_key`(`appKey`),
@@ -35,25 +35,25 @@ CREATE TABLE `applications` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `api_keys` (
-  `id` VARCHAR(191) NOT NULL,
-  `appKey` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `appKey` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   UNIQUE INDEX `api_keys_appKey_key`(`appKey`),
   PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `events_raw` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
   `type` ENUM('error', 'performance', 'behavior', 'custom') NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
-  `sessionId` VARCHAR(191) NOT NULL,
-  `traceId` VARCHAR(191) NOT NULL,
-  `userId` VARCHAR(191) NULL,
+  `name` VARCHAR(128) NOT NULL,
+  `sessionId` VARCHAR(64) NOT NULL,
+  `traceId` VARCHAR(64) NOT NULL,
+  `userId` VARCHAR(64) NULL,
   `url` TEXT NOT NULL,
-  `release` VARCHAR(191) NULL,
-  `environment` VARCHAR(191) NOT NULL,
+  `release` VARCHAR(128) NULL,
+  `environment` VARCHAR(32) NOT NULL,
   `payload` JSON NOT NULL,
   `occurredAt` DATETIME(3) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -63,23 +63,23 @@ CREATE TABLE `events_raw` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `error_events` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
-  `rawEventId` VARCHAR(191) NULL,
-  `fingerprint` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
+  `rawEventId` VARCHAR(64) NULL,
+  `fingerprint` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
   `message` TEXT NOT NULL,
   `stack` LONGTEXT NULL,
   `mappedStack` LONGTEXT NULL,
-  `source` VARCHAR(191) NULL,
+  `source` VARCHAR(64) NULL,
   `filename` TEXT NULL,
   `lineno` INTEGER NULL,
   `colno` INTEGER NULL,
   `url` TEXT NOT NULL,
-  `release` VARCHAR(191) NULL,
-  `environment` VARCHAR(191) NOT NULL,
-  `sessionId` VARCHAR(191) NOT NULL,
-  `userId` VARCHAR(191) NULL,
+  `release` VARCHAR(128) NULL,
+  `environment` VARCHAR(32) NOT NULL,
+  `sessionId` VARCHAR(64) NOT NULL,
+  `userId` VARCHAR(64) NULL,
   `occurredAt` DATETIME(3) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX `error_events_applicationId_occurredAt_idx`(`applicationId`, `occurredAt`),
@@ -88,18 +88,18 @@ CREATE TABLE `error_events` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `performance_events` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
-  `rawEventId` VARCHAR(191) NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
+  `rawEventId` VARCHAR(64) NULL,
+  `name` VARCHAR(128) NOT NULL,
   `value` DOUBLE NULL,
   `duration` DOUBLE NULL,
   `status` INTEGER NULL,
   `url` TEXT NOT NULL,
   `metadata` JSON NULL,
-  `release` VARCHAR(191) NULL,
-  `environment` VARCHAR(191) NOT NULL,
-  `sessionId` VARCHAR(191) NOT NULL,
+  `release` VARCHAR(128) NULL,
+  `environment` VARCHAR(32) NOT NULL,
+  `sessionId` VARCHAR(64) NOT NULL,
   `occurredAt` DATETIME(3) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX `performance_events_applicationId_name_occurredAt_idx`(`applicationId`, `name`, `occurredAt`),
@@ -107,17 +107,17 @@ CREATE TABLE `performance_events` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `behavior_events` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
-  `rawEventId` VARCHAR(191) NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
+  `rawEventId` VARCHAR(64) NULL,
+  `name` VARCHAR(128) NOT NULL,
   `target` TEXT NULL,
   `url` TEXT NOT NULL,
   `metadata` JSON NULL,
-  `release` VARCHAR(191) NULL,
-  `environment` VARCHAR(191) NOT NULL,
-  `sessionId` VARCHAR(191) NOT NULL,
-  `userId` VARCHAR(191) NULL,
+  `release` VARCHAR(128) NULL,
+  `environment` VARCHAR(32) NOT NULL,
+  `sessionId` VARCHAR(64) NOT NULL,
+  `userId` VARCHAR(64) NULL,
   `occurredAt` DATETIME(3) NOT NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   INDEX `behavior_events_applicationId_name_occurredAt_idx`(`applicationId`, `name`, `occurredAt`),
@@ -125,10 +125,10 @@ CREATE TABLE `behavior_events` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `metric_aggregates` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
   `bucket` DATETIME(3) NOT NULL,
-  `metric` VARCHAR(191) NOT NULL,
+  `metric` VARCHAR(128) NOT NULL,
   `value` DOUBLE NOT NULL,
   `dimensions` JSON NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -138,9 +138,9 @@ CREATE TABLE `metric_aggregates` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `alert_rules` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
-  `name` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
+  `name` VARCHAR(128) NOT NULL,
   `metric` ENUM('error_count', 'error_rate', 'api_failure_rate', 'lcp') NOT NULL,
   `operator` ENUM('gt', 'gte', 'lt', 'lte') NOT NULL,
   `threshold` DOUBLE NOT NULL,
@@ -155,8 +155,8 @@ CREATE TABLE `alert_rules` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `alert_records` (
-  `id` VARCHAR(191) NOT NULL,
-  `ruleId` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `ruleId` VARCHAR(64) NOT NULL,
   `value` DOUBLE NOT NULL,
   `message` TEXT NOT NULL,
   `notified` BOOLEAN NOT NULL DEFAULT false,
@@ -166,9 +166,9 @@ CREATE TABLE `alert_records` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `sourcemap_artifacts` (
-  `id` VARCHAR(191) NOT NULL,
-  `applicationId` VARCHAR(191) NOT NULL,
-  `release` VARCHAR(191) NOT NULL,
+  `id` VARCHAR(64) NOT NULL,
+  `applicationId` VARCHAR(64) NOT NULL,
+  `release` VARCHAR(128) NOT NULL,
   `fileName` VARCHAR(191) NOT NULL,
   `filePath` VARCHAR(191) NOT NULL,
   `sourceRoot` VARCHAR(191) NULL,
