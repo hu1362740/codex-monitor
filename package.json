@@ -13,6 +13,7 @@
     "db:check": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:check",
     "db:generate": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:generate",
     "db:migrate": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:migrate",
+    "db:reset": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server exec prisma migrate reset --schema prisma/schema.prisma",
     "db:seed": "node scripts/run-with-env.mjs pnpm --filter @codex-monitor/server prisma:seed"
   },
   "devDependencies": {

@@ -66,7 +66,7 @@ model Application {
   project         Project             @relation(fields: [projectId], references: [id])
   appKey          String              @unique @db.VarChar(64)
   allowedDomains  Json
-  environment     String              @default("production")
+  environment     String              @default("production") @db.VarChar(32)
   eventsRaw       EventRaw[]
   errorEvents     ErrorEvent[]
   performanceEvents PerformanceEvent[]
