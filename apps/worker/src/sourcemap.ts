@@ -4,6 +4,14 @@ import type { PrismaClient } from "@prisma/client";
 
 const STACK_LINE_RE = /(?<file>https?:\/\/[^\s)]+|[^()\s]+\.js):(?<line>\d+):(?<column>\d+)/;
 
+/**
+ * 将生产 bundle 中的堆栈行列号映射回原始源码位置。
+ *
+ * 当前 MVP 匹配策略：
+ * - 通过 applicationId + release 查找最新上传的 sourcemap
+ * - 对包含 file:line:column 的堆栈行逐行反解
+ * - 无法匹配的堆栈行保持原样
+ */
 export async function mapStack(
   prisma: PrismaClient,
   input: { applicationId: string; release?: string; stack?: string }
@@ -37,6 +45,7 @@ export async function mapStack(
         if (!original.source || original.line == null || original.column == null) {
           return line;
         }
+        // sourceRoot 是上传时配置的展示前缀，不参与 source-map 查找计算。
         const source = artifact.sourceRoot ? `${artifact.sourceRoot}/${original.source}` : original.source;
         return `${line} => ${source}:${original.line}:${original.column}`;
       })

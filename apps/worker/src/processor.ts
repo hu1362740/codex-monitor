@@ -5,10 +5,12 @@ import { mapStack } from "./sourcemap";
 import type { BatchJob, CollectedEvent } from "./types";
 
 function fingerprint(event: CollectedEvent): string {
+  // fingerprint 用于把核心特征相同的重复错误归为同一类。
   return createHash("sha1").update([event.name, event.message, event.filename, event.lineno].join("|")).digest("hex");
 }
 
 function bucketMinute(date: Date): Date {
+  // 聚合指标按分钟粒度存储。
   const bucket = new Date(date);
   bucket.setSeconds(0, 0);
   return bucket;
@@ -22,6 +24,8 @@ function userId(event: CollectedEvent): string | undefined {
 export async function processBatch(prisma: PrismaClient, job: BatchJob): Promise<void> {
   for (const event of job.events) {
     const occurredAt = new Date(event.timestamp);
+
+    // 先保存原始 payload，后续即使明细表结构变化，也可以基于原始事件重新处理。
     const raw = await prisma.eventRaw.create({
       data: {
         applicationId: job.applicationId,
@@ -39,6 +43,7 @@ export async function processBatch(prisma: PrismaClient, job: BatchJob): Promise
     });
 
     if (event.type === "error") {
+      // sourcemap 反解是尽力而为：没有匹配文件时 mappedStack 为空，但原始 stack 仍会保存。
       const mappedStack = await mapStack(prisma, {
         applicationId: job.applicationId,
         release: event.release,
@@ -124,5 +129,6 @@ export async function processBatch(prisma: PrismaClient, job: BatchJob): Promise
     });
   }
 
+  // 每个批次处理完成后再计算告警，确保本批新写入的数据能被告警查询命中。
   await evaluateAlerts(prisma, job.applicationId);
 }

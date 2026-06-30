@@ -17,6 +17,7 @@ function compare(operator: AlertRule["operator"], value: number, threshold: numb
 }
 
 async function notify(rule: AlertRule, message: string): Promise<boolean> {
+  // Webhook 目标保持通用，便于接入飞书、钉钉、企业微信或内部通知网关。
   if (rule.channel === "webhook") {
     const response = await fetch(rule.target, {
       method: "POST",
@@ -26,6 +27,7 @@ async function notify(rule: AlertRule, message: string): Promise<boolean> {
     return response.ok;
   }
 
+  // SMTP 未配置时不阻断事件入库，只把本次告警记录标记为未通知。
   if (!process.env.SMTP_HOST) {
     return false;
   }
@@ -59,6 +61,7 @@ export async function evaluateAlerts(prisma: PrismaClient, applicationId: string
 
   const now = new Date();
   for (const rule of rules) {
+    // durationMin 表示当前规则向前回看的时间窗口。
     const since = new Date(now.getTime() - rule.durationMin * 60_000);
     const [errorCount, pvCount, apiEvents, lcpEvents] = await Promise.all([
       prisma.errorEvent.count({ where: { applicationId, occurredAt: { gte: since } } }),
