@@ -20,6 +20,10 @@ export class CollectEventDto {
   @IsString()
   url!: string;
 
+  @IsOptional()
+  @IsString()
+  referrer?: string;
+
   @IsString()
   userAgent!: string;
 
@@ -47,6 +51,22 @@ export class CollectEventDto {
   @IsOptional()
   @IsString()
   source?: string;
+
+  @IsOptional()
+  @IsString()
+  filename?: string;
+
+  @IsOptional()
+  @IsNumber()
+  lineno?: number;
+
+  @IsOptional()
+  @IsNumber()
+  colno?: number;
+
+  @IsOptional()
+  @IsString()
+  target?: string;
 
   @IsOptional()
   @IsNumber()

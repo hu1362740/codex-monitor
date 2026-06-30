@@ -2,6 +2,11 @@ import { Empty, Table, Typography } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { monitorApi } from "../api/client";
 
+/**
+ * @description 展示当前选中应用的错误事件列表，并支持展开查看错误堆栈。
+ * @param applicationId string，顶部应用选择器当前选中的应用 ID。
+ * @returns JSX.Element，错误监控页面。
+ */
 export function ErrorsPage({ applicationId }: { applicationId: string }) {
   const query = useQuery({ queryKey: ["errors", applicationId], queryFn: () => monitorApi.errors(applicationId), enabled: Boolean(applicationId) });
   if (!applicationId) return <Empty description="请先选择应用" />;
@@ -16,6 +21,7 @@ export function ErrorsPage({ applicationId }: { applicationId: string }) {
         columns={[
           { title: "错误", dataIndex: "name", width: 180 },
           { title: "消息", dataIndex: "message", ellipsis: true },
+          { title: "来源", dataIndex: "source", width: 120 },
           { title: "页面", dataIndex: "url", ellipsis: true },
           { title: "版本", dataIndex: "release", width: 140 },
           { title: "时间", dataIndex: "occurredAt", width: 220 }
