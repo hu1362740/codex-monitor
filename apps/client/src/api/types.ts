@@ -34,6 +34,7 @@ export interface ErrorEvent {
   message: string;
   stack?: string;
   mappedStack?: string;
+  source?: string;
   url: string;
   release?: string;
   occurredAt: string;

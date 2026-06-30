@@ -99,6 +99,19 @@ body {
   margin-top: 16px;
 }
 
+.filter-bar {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.filter-keyword {
+  width: 260px;
+}
+
+.filter-select {
+  width: 160px;
+}
+
 .field-sm {
   width: 86px;
 }
@@ -110,5 +123,10 @@ body {
 @media (max-width: 960px) {
   .two-column {
     grid-template-columns: 1fr;
+  }
+
+  .filter-keyword,
+  .filter-select {
+    width: 100%;
   }
 }
