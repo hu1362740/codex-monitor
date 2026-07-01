@@ -1,82 +1,136 @@
 services:
+  # MySQL 用于持久化用户、项目、应用、监控事件、告警和 sourcemap 记录。
   mysql:
+    # 使用 MySQL 8.4 官方镜像，和项目文档中的部署环境保持一致。
     image: mysql:8.4
+    # 固定容器名，方便本地通过 docker logs / docker exec 定位容器。
     container_name: codex-monitor-mysql
+    # 除非手动停止，否则 Docker 或宿主机重启后自动恢复服务。
     restart: unless-stopped
     environment:
+      # 首次初始化容器时自动创建的业务数据库。
       MYSQL_DATABASE: codex_monitor
+      # 应用服务访问 MySQL 使用的普通账号。
       MYSQL_USER: monitor
+      # 本地和测试环境示例密码；生产环境必须替换为强密码。
       MYSQL_PASSWORD: monitor_pass
+      # root 账号密码，仅用于初始化、迁移排查等管理场景。
       MYSQL_ROOT_PASSWORD: root_pass
     ports:
+      # 将宿主机 3306 映射到容器 3306，便于本机 Prisma、数据库客户端访问。
       - "3306:3306"
     volumes:
+      # 持久化 MySQL 数据，避免容器重建后数据库丢失。
       - mysql_data:/var/lib/mysql
     healthcheck:
+      # 使用 mysqladmin ping 判断数据库是否真正可用，而不只是容器已启动。
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_pass"]
+      # 每 10 秒检查一次健康状态。
       interval: 10s
+      # 单次健康检查超过 5 秒视为失败。
       timeout: 5s
+      # 连续失败 10 次后标记为 unhealthy。
       retries: 10
 
+  # Redis 用作 BullMQ 队列后端，Server 入队，Worker 消费。
   redis:
+    # Alpine 镜像体积较小，适合作为本地和测试环境的 Redis 基础镜像。
     image: redis:7-alpine
+    # 固定容器名，方便查看日志和进入容器排查。
     container_name: codex-monitor-redis
+    # 除非手动停止，否则 Docker 或宿主机重启后自动恢复服务。
     restart: unless-stopped
     ports:
+      # 将宿主机 6379 映射到容器 6379，便于本机 Server/Worker 开发时访问。
       - "6379:6379"
     healthcheck:
+      # Redis 返回 PONG 时，说明服务已可接受连接。
       test: ["CMD", "redis-cli", "ping"]
+      # 每 10 秒检查一次健康状态。
       interval: 10s
+      # 单次健康检查超过 5 秒视为失败。
       timeout: 5s
+      # 连续失败 10 次后标记为 unhealthy。
       retries: 10
 
+  # NestJS API 服务，提供登录、项目管理、SDK 上报、查询和 sourcemap 上传接口。
   server:
     build:
+      # 构建上下文使用项目根目录，Dockerfile 需要读取 monorepo 根依赖文件。
       context: .
+      # Server 独立 Dockerfile，负责编译 apps/server。
       dockerfile: docker/server.Dockerfile
+    # 固定容器名，方便定位 API 服务容器。
     container_name: codex-monitor-server
+    # 服务异常退出或宿主机重启时自动恢复。
     restart: unless-stopped
+    # 读取根目录 .env，提供 JWT_SECRET、SMTP 等通用配置。
     env_file: .env
     environment:
+      # 容器内部访问 MySQL 要使用 Compose 服务名 mysql，不能使用 localhost。
       DATABASE_URL: mysql://monitor:monitor_pass@mysql:3306/codex_monitor
+      # 容器内部访问 Redis 要使用 Compose 服务名 redis。
       REDIS_HOST: redis
+      # API 服务监听端口，需与 ports 映射保持一致。
       SERVER_PORT: 3000
     ports:
+      # 将宿主机 3000 映射到容器 3000，对外提供 http://localhost:3000/api。
       - "3000:3000"
     depends_on:
       mysql:
+        # 等 MySQL 健康检查通过后再启动 Server，避免启动时数据库不可用。
         condition: service_healthy
       redis:
+        # 等 Redis 健康检查通过后再启动 Server，避免 BullMQ 初始化失败。
         condition: service_healthy
 
+  # BullMQ Worker 服务，异步消费监控事件并写入 MySQL，处理聚合、告警和 sourcemap 反解。
   worker:
     build:
+      # 构建上下文使用项目根目录，Dockerfile 需要同时读取 server 和 worker 相关文件。
       context: .
+      # Worker 独立 Dockerfile，负责编译 apps/worker 并生成 Prisma Client。
       dockerfile: docker/worker.Dockerfile
+    # 固定容器名，方便查看消费日志。
     container_name: codex-monitor-worker
+    # Worker 异常退出或宿主机重启时自动恢复。
     restart: unless-stopped
+    # 读取根目录 .env，提供 SMTP 等告警配置。
     env_file: .env
     environment:
+      # Worker 在容器内部访问 MySQL，也需要使用 Compose 服务名 mysql。
       DATABASE_URL: mysql://monitor:monitor_pass@mysql:3306/codex_monitor
+      # Worker 在容器内部访问 Redis 队列，也需要使用 Compose 服务名 redis。
       REDIS_HOST: redis
     depends_on:
       mysql:
+        # 等 MySQL 可用后再启动 Worker，避免消费时写库失败。
         condition: service_healthy
       redis:
+        # 等 Redis 可用后再启动 Worker，避免队列连接失败。
         condition: service_healthy
 
+  # React/Vite 控制台，用于查看监控数据、管理项目应用、配置告警和上传 sourcemap。
   client:
     build:
+      # 构建上下文使用项目根目录，Dockerfile 需要读取 monorepo 根依赖文件。
       context: .
+      # Client 独立 Dockerfile，当前以 Vite dev server 方式运行。
       dockerfile: docker/client.Dockerfile
+    # 固定容器名，方便定位前端控制台容器。
     container_name: codex-monitor-client
+    # 前端容器异常退出或宿主机重启时自动恢复。
     restart: unless-stopped
     environment:
+      # 浏览器访问 API 的地址；这里的 localhost 指用户浏览器所在机器。
       VITE_API_BASE_URL: http://localhost:3000/api
     ports:
+      # 将宿主机 5173 映射到容器 5173，对外提供 http://localhost:5173。
       - "5173:5173"
     depends_on:
+      # Client 依赖 Server；这里只保证启动顺序，不保证 Server API 已完全可用。
       - server
 
 volumes:
+  # Docker 管理的 MySQL 数据卷，用于保存 /var/lib/mysql。
   mysql_data:
